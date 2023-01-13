@@ -1,0 +1,14 @@
+
+public class Main {
+
+	public static void main(String[] args) {
+		Processes p = new Processes(2);
+		p.add("P1", 0, 10);
+		p.add("P2", 0, 1);
+		p.add("P3", 0, 2);
+		p.add("P4", 0, 1);
+		p.add("P5", 0, 5);
+		p.fcfs();
+	}
+
+}

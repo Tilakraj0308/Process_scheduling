@@ -1,0 +1,11 @@
+
+public class Process {
+	String pid;
+	int arr;
+	int burst;
+	public Process(String pid, int arr, int burst) {
+		this.pid = pid;
+		this.arr = arr;
+		this.burst = burst;
+	}
+}

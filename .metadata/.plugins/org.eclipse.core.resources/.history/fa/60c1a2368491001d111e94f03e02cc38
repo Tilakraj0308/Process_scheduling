@@ -1,0 +1,66 @@
+
+public class Process implements Comparable<Process>{
+	String pid;
+	int arr;
+	int burst;
+	int tat = 0;
+	int wt = 0;
+	int rt = 0;
+	int ct = 0;
+	
+	public Process(String pid, int arr, int burst) {
+		this.pid = pid;
+		this.arr = arr;
+		this.burst = burst;
+	}
+
+	public int getTat() {
+		return tat;
+	}
+
+	public void setTat(int tat) {
+		this.tat = tat;
+	}
+
+	public int getWt() {
+		return wt;
+	}
+
+	public void setWt(int wt) {
+		this.wt = wt;
+	}
+
+	public int getRt() {
+		return rt;
+	}
+
+	public void setRt(int rt) {
+		this.rt = rt;
+	}
+
+	public int getCt() {
+		return ct;
+	}
+
+	public void setCt(int ct) {
+		this.ct = ct;
+	}
+
+	public String getPid() {
+		return pid;
+	}
+
+	public int getArr() {
+		return arr;
+	}
+
+	public int getBurst() {
+		return burst;
+	}
+
+	@Override
+	public int compareTo(Process o) {
+		return this.arr-o.arr; 
+	}
+	
+}

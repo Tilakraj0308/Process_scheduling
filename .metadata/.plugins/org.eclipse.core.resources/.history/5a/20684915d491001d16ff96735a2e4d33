@@ -1,0 +1,273 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+
+public class Processes {
+	ArrayList<Process> pr;
+	int tquantm;
+	public Processes(int tquantm) {
+		pr = new ArrayList<>();
+		this.tquantm = tquantm;
+	}
+	public void add(String pid, int ar, int burst){
+		pr.add(new Process(pid, ar, burst));
+	}
+	public void fcfs() {
+		ArrayList<Process> gantt_rec = new ArrayList<>();
+		Collections.sort(pr);
+		int curr = 0;
+		for(Process p : pr) {
+			curr = non_prmtiv_processing(p, curr, gantt_rec);
+		}
+		present(gantt_rec);
+		set_to_default();
+	}
+	
+	public void sjf() {
+		Collections.sort(pr);
+		ArrayList<Process> gantt_rec = new ArrayList<>();
+		int curr = 0;
+		int n = pr.size();
+		PriorityQueue<Process> pq = new PriorityQueue<>(new Comparator<Process>() {
+
+			@Override
+			public int compare(Process o1, Process o2) {
+				if(o1.getRemaining() == o2.getRemaining())
+					return o1.getAr()-o2.getAr();
+				return o1.getRemaining() - o2.getRemaining();
+			}
+		});
+		pq.add(pr.get(0));
+		for(int i = 1 ; i < n ; i++) {
+			if(pr.get(i).getAr() > curr) {
+				i--;
+				if(pq.isEmpty()) {
+					curr++;
+					gantt_rec.add(new Process("", 0, curr));
+					continue;
+				}
+			}
+			else {
+				while(i < n && curr >= pr.get(i).getAr()) {
+					pq.add(pr.get(i));
+					i++;
+				}
+				i--;
+			}
+//			System.out.println(pq);
+			Process temp = pq.poll();
+			curr = non_prmtiv_processing(temp, curr, gantt_rec);
+		}
+//		System.out.println();
+//		System.out.println(pq);
+		while(!pq.isEmpty()) {
+			Process temp = pq.poll();
+			curr = non_prmtiv_processing(temp, curr, gantt_rec);
+		}
+		present(gantt_rec);
+		set_to_default();
+	}
+	
+	public void srtf() {
+		ArrayList<Process> gantt_rec = new ArrayList<>();
+		Collections.sort(pr);
+		int curr = 0;
+		int n = pr.size();
+		PriorityQueue<Process> pq = new PriorityQueue<>(new Comparator<Process>() {
+
+			@Override
+			public int compare(Process o1, Process o2) {
+				if(o1.getRemaining() == o2.getRemaining())
+					return o1.getAr()-o2.getAr();
+				return o1.getRemaining() - o2.getRemaining();
+			}
+		});
+		pq.add(pr.get(0));
+		for(int i = 1 ; i < n ; i++) {
+			if(pr.get(i).getAr() > curr) {
+				i--;
+				if(pq.isEmpty()) {
+					curr++;
+					gantt_rec.add(new Process("", 0, curr));
+					continue;
+				}
+			}
+			else {
+				while(i < n && curr >= pr.get(i).getAr()) {
+					pq.add(pr.get(i));
+					i++;
+				}
+				i--;
+			}
+			Process temp = pq.poll();
+			curr = prmtiv_processing(temp, curr, gantt_rec);
+			if(temp.isDone())
+				pq.add(temp);
+		}
+		while(!pq.isEmpty()) {
+			Process temp = pq.poll();
+			curr = prmtiv_processing(temp, curr, gantt_rec);
+			if(temp.isDone())
+				pq.add(temp);
+		}
+		present(gantt_rec);
+		set_to_default();
+	}
+	
+	public void rr() {
+		ArrayList<Process> gantt_rec = new ArrayList<>();
+		Collections.sort(pr);
+		int curr = 0;
+		int n = pr.size();
+//		PriorityQueue<Process> pq = new PriorityQueue<>();
+		Queue<Process> pq = new LinkedList<>();
+//		pq.add(pr.get(0));
+//		for(int i = 0 ; i < n ; i++) {
+//			if(pr.get(i).getAr() > curr) {
+//				i--;
+//				if(pq.isEmpty()) {
+//					curr++;
+//					gantt_rec.add(new Process("", 0, curr));
+//					continue;
+//				}
+//			}
+//			else {
+//				while(i < n && curr >= pr.get(i).getAr()) {
+//					pq.add(pr.get(i));
+//					i++;
+//				}
+//				i--;
+//			}
+		for(Process p : pr)
+			pq.add(p);
+//			System.out.println(pq);
+//			Process temp = pq.poll();
+//			curr = prmtiv_processing(temp, curr, gantt_rec, tquantm);
+//			if(!temp.isDone())
+//				pq.add(temp);
+//		}
+//		System.out.println();
+//		System.out.println(pq);
+		while(!pq.isEmpty()) {
+			Process temp = pq.poll();
+			if(curr < temp.getAr()) {
+				curr = temp.getAr();
+				gantt_rec.add(new Process("", 0, 0, curr));
+			}
+			curr = prmtiv_processing(temp, curr, gantt_rec, tquantm);
+			if(!temp.isDone())
+				pq.add(temp);
+		}
+		present(gantt_rec);
+		set_to_default();
+	}
+	
+	public int prmtiv_processing(Process temp, int curr, ArrayList<Process> gantt, int tq) {
+		if(!temp.hasHit()) {
+			temp.setRt(curr - temp.getAr());
+			temp.setHasHit(true);
+		}
+		curr += Math.min(tq, temp.getRemaining());
+		temp.setCt(curr);
+		temp.setTat(temp.getCt()-temp.getAr());
+		temp.setWt(temp.getTat()-temp.getBurst());
+		if(temp.getRemaining() < tquantm)
+			temp.setRemaining(0);
+		else
+			temp.setRemaining(temp.getRemaining()-tquantm);
+		temp.setDone(temp.getRemaining()==0);
+		gantt.add(new Process(temp.getPid(), 0, 0, curr));
+		return curr;
+	}
+	public int prmtiv_processing(Process temp, int curr, ArrayList<Process> gantt) {
+		if(!temp.hasHit()) {
+			temp.setRt(curr - temp.getAr());
+			temp.setHasHit(true);
+		}
+		curr += 1;
+		temp.setCt(curr);
+		temp.setTat(temp.getCt()-temp.getAr());
+		temp.setWt(temp.getTat()-temp.getBurst());
+		temp.setRemaining(temp.getRemaining()-1);
+		temp.setDone(temp.getRemaining()>0);
+		gantt.add(new Process(temp.getPid(), 0, 0, curr));
+		return curr;
+	}
+	public int non_prmtiv_processing(Process temp, int curr, ArrayList<Process> gantt_rec) {
+		curr = Math.max(curr, temp.getAr());
+		temp.setRt(curr - temp.getAr());
+		curr += temp.getBurst();
+		temp.setCt(curr);
+		temp.setTat(temp.getCt()-temp.getAr());
+		temp.setWt(temp.getTat()-temp.getBurst());
+		temp.setDone(true);
+		temp.setRemaining(0);
+		gantt_rec.add(temp);
+		return curr;
+	}
+	
+	public void set_to_default() {
+		for(Process p : pr) {
+			p.setDone(false);
+			p.setRemaining(p.getBurst());
+		}
+	}
+	public void present(ArrayList<Process> gantt) {
+		printGanttchart(gantt);
+		print_table();
+	}
+	public void printGanttchart(ArrayList<Process> gantt) {
+		Collections.sort(gantt, new Comparator<Process>() {
+			@Override
+			public int compare(Process o1, Process o2) {
+				if(o1.getCt() == o2.getCt())
+					return o1.getAr()-o2.getAr();
+				return o1.getCt() - o2.getCt();
+			}
+		});
+		int len = gantt.size();
+        this.header(len);
+        for (int i = 0; i < len + 1; i++) {
+            System.out.print("|");
+            if (i < len) {
+                System.out.print(String.format("%4s", gantt.get(i).getPid()));
+                System.out.print(String.format("%2s", ""));
+            }
+        }
+        System.out.println();
+        this.header(len);
+        System.out.print(String.format("%-7s", "0"));
+        for (int i = 0; i < len; i++) {
+            System.out.print(String.format("%-7s", gantt.get(i).getCt()));
+        }
+        System.out.println();
+	}
+	private void header(int len) {
+        for (int i = 0; i < len + 1; i++) {
+            System.out.print("+");
+            if (i < len) {
+                System.out.print("-".repeat(6));
+            }
+        }
+        System.out.println();
+    }
+	public void print_table() {
+		Collections.sort(pr, new Comparator<Process>() {
+
+			@Override
+			public int compare(Process o1, Process o2) {
+				return o1.getPid().compareTo(o2.getPid());
+			}
+			
+		});
+        System.out.println("PR\tAT\tBT\tCT\tTAT\tWT\tRT");
+        for(Process p : pr) {
+            System.out.println(p.getPid() + "\t" + p.getAr() + "\t" + p.getBurst() + "\t" + p.getCt() + "\t "
+                    + p.getTat() + "\t" + p.getWt() + "\t" + p.getRt());
+        }
+    }
+}
